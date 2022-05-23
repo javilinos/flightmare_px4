@@ -72,8 +72,6 @@ FlightmarePX4::FlightmarePX4(const ros::NodeHandle &nh, const ros::NodeHandle &p
 
   env_reset_ = nh_.subscribe("/"+ drone_name +"/environment/flightmare/reset", 1,
                                  &FlightmarePX4::resetCallback, this);
-
-  net_update_ = nh_.subscribe("/environment/flightmare/net_update", 1, &FlightmarePX4::netCallback, this);
   
   pause_srv_ = nh_.serviceClient<std_srvs::Empty>("/gazebo/pause_physics");
   unpause_srv_ = nh_.serviceClient<std_srvs::Empty>("/gazebo/unpause_physics");
@@ -171,17 +169,17 @@ void FlightmarePX4::poseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg
   }*/
 }
 
-void FlightmarePX4::netCallback(std_msgs::Empty sig) {
-  net_updating = true;
-  std::cout << "entra aqui" << std::endl;
-}
-
 void FlightmarePX4::resetCallback(std_msgs::Empty sig) {
 
     geometry_msgs::PoseArray poses;
 
-    float rng1 = -5 + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(5-(-5))));
-    float rng2 = -5 + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(5-(-5))));
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    std::uniform_real_distribution<> dist(-5, 5);
+
+    float rng1 = dist(gen);
+    float rng2 = dist(gen);
     gate->setPosition(Eigen::Vector3f(rng1, rng2, 0)); //se aleatoriza sobre el eje y
   
     gate->setQuaternion(
@@ -267,7 +265,6 @@ void FlightmarePX4::mainLoopCallback(const ros::TimerEvent &event) {
   unity_bridge_ptr_->getRender(0);
   unity_bridge_ptr_->handleOutput();
 
-  std::cout << "aaaaaaaaaaaaa" << std::endl;
 
   //rgb_camera_->getRGBImage(img);
   //sensor_msgs::ImagePtr rgb_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
